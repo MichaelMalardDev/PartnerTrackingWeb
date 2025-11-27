@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { doc, onSnapshot, collection, addDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from './lib/firebase';
 import { db } from './lib/firebase';
-import { LuPlus, LuX, LuMapPin } from "react-icons/lu";
+import { LuPlus, LuX, LuLogOut } from "react-icons/lu";
 
 // Composants
 import Dashboard from './components/Dashboard';
 import PlaceDetails from './components/PlaceDetails';
+import Login from './components/Login';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './App.css';
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;;
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const App = () => {
   // --- ETATS ---
@@ -22,6 +25,10 @@ const App = () => {
   const [isAddingMode, setIsAddingMode] = useState(false);
   const [places, setPlaces] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  
+  // États d'authentification
+  const [user, setUser] = useState(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   // Refs
   const isAddingRef = useRef(false);
@@ -32,6 +39,15 @@ const App = () => {
 
   useEffect(() => { isAddingRef.current = isAddingMode; }, [isAddingMode]);
 
+  // --- AUTHENTIFICATION ---
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   // --- HANDLERS ---
   const handleSelectPlace = (place) => {
     setSelectedPlace(place);
@@ -39,12 +55,7 @@ const App = () => {
 
     if (!map.current) return;
 
-    // On récupère le zoom actuel de la carte
     const currentZoom = map.current.getZoom();
-
-    // LOGIQUE INTELLIGENTE :
-    // Si on est déjà proche (zoom > 13), on garde le zoom actuel pour éviter le "saut".
-    // Sinon, on va au zoom 14 (standard).
     const targetZoom = currentZoom > 14 ? currentZoom : 14;
 
     map.current.flyTo({
@@ -72,7 +83,9 @@ const App = () => {
 
   // --- LOGIQUE CARTE ---
   useEffect(() => {
-    if (map.current) return;
+    // On ne charge la carte QUE si l'utilisateur est connecté
+    if (!user || map.current) return; 
+
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     map.current = new mapboxgl.Map({
@@ -93,7 +106,6 @@ const App = () => {
       .setLngLat([-73.5673, 45.5017])
       .addTo(map.current);
 
-    // Click Carte (Ajout)
     map.current.on('click', async (e) => {
       if (!isAddingRef.current) return;
       const { lng, lat } = e.lngLat;
@@ -107,12 +119,14 @@ const App = () => {
         } catch (error) { console.error(error); }
       }
     });
-  }, []);
+  }, [user]); // Dépendance ajoutée : user
 
   // --- LOGIQUE DONNÉES (Firebase) ---
 
   // 1. Lieux
   useEffect(() => {
+    if (!user) return; // Sécurité
+
     const unsubscribe = onSnapshot(collection(db, "places"), (snapshot) => {
       const placesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPlaces(placesList);
@@ -145,10 +159,12 @@ const App = () => {
       });
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // 2. Tracker Utilisateur
   useEffect(() => {
+    if (!user) return; // Sécurité
+
     const unsubscribe = onSnapshot(doc(db, "users", "partner_01"), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -167,16 +183,42 @@ const App = () => {
       }
     });
     return () => unsubscribe();
-  }, [selectedPlace]);
+  }, [selectedPlace, user]);
 
 
+  // --- RENDU CONDITIONNEL (LA SÉCURITÉ) ---
+  
+  if (isLoadingAuth) {
+    return <div className="h-screen w-screen bg-black flex items-center justify-center text-zinc-500 font-mono animate-pulse">Chargement du système...</div>;
+  }
 
-  // --- RENDU ---
+  if (!user) {
+    return <Login />;
+  }
+
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden font-sans">
 
       <div className='absolute top-5 left-5 z-10 w-80 flex flex-col gap-0.5'>
-        <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-t-2xl rounded-b-md p-6 shadow-2xl transition-all">
+        
+        {/* HEADER DE CONNEXION (Nouveau) */}
+        {!selectedPlace && (
+           <div className="bg-zinc-900/90 backdrop-blur-xl border-x border-t border-white/10 rounded-t-2xl p-4 flex justify-between items-center animate-in slide-in-from-top-2">
+              <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                  <span className="text-[10px] text-zinc-400 font-mono truncate max-w-[140px]">{user.email}</span>
+              </div>
+              <button 
+                onClick={() => signOut(auth)}
+                className="text-zinc-500 hover:text-red-400 transition-colors flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider cursor-pointer"
+                title="Se déconnecter"
+              >
+                <LuLogOut size={12} /> Sortir
+              </button>
+           </div>
+        )}
+
+        <div className={`bg-zinc-900/90 backdrop-blur-xl border border-white/10 ${!selectedPlace ? 'rounded-t-none border-t-0' : 'rounded-t-2xl'} rounded-b-md p-6 shadow-2xl transition-all`}>
           {selectedPlace ? (
             <PlaceDetails
               place={selectedPlace}
