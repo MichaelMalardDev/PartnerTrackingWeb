@@ -31,3 +31,45 @@
 .popup-btn:hover {
   opacity: 0.8;
 }
+
+/* --- C'EST ICI QUE LA MAGIE OPÈRE (CUSTOM SCROLLBAR) --- */
+
+/* --- SCROLLBAR FANTÔME (Apparition au survol uniquement) --- */
+
+/* 1. Configuration de base (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;               /* Très fin */
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;  /* Fond toujours invisible */
+}
+
+/* 2. Le curseur (Thumb) est transparent par défaut */
+::-webkit-scrollbar-thumb {
+  background: transparent;  
+  border-radius: 10px;
+  transition: background 0.2s ease; /* Transition douce pour l'apparition */
+}
+
+/* 3. MAGIE : Quand on survole une zone scrollable, la barre apparait */
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2); /* Apparait en gris discret */
+}
+
+/* 4. État actif (quand on clique sur la barre) */
+::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.4); /* Devient plus clair */
+}
+
+/* --- Support Firefox --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* Invisible par défaut */
+  transition: scrollbar-color 0.2s;
+}
+
+*:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; /* Visible au survol */
+}

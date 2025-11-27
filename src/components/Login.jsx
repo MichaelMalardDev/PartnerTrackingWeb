@@ -19,7 +19,6 @@ export default function Login() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      // Pas besoin de redirection, le listener dans App.jsx fera le travail
     } catch (err) {
       setError("Erreur : " + err.message);
     }
@@ -27,9 +26,10 @@ export default function Login() {
 
   return (
     <div className="h-screen w-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-zinc-900/90 border border-white/10 p-8 rounded-2xl shadow-2xl backdrop-blur-xl">
+      {/* Responsive padding: p-6 on mobile, p-8 on desktop */}
+      <div className="w-full max-w-md bg-zinc-900/90 border border-white/10 p-6 md:p-8 rounded-2xl shadow-2xl backdrop-blur-xl">
         
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6 md:mb-8">
           <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-white text-3xl border border-white/10">
             <FaCarSide />
           </div>
@@ -70,7 +70,7 @@ export default function Login() {
 
           <button 
             type="submit"
-            className="w-full bg-white text-black font-bold py-3 rounded-lg mt-2 hover:bg-zinc-200 transition-colors"
+            className="w-full bg-white text-black font-bold py-3 rounded-lg mt-2 hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             {isRegistering ? "Créer un compte" : "Se connecter"}
           </button>
@@ -79,7 +79,7 @@ export default function Login() {
         {/* <div className="mt-6 text-center">
           <button 
             onClick={() => setIsRegistering(!isRegistering)}
-            className="text-xs text-zinc-500 hover:text-white transition-colors underline"
+            className="text-xs text-zinc-500 hover:text-white transition-colors underline cursor-pointer"
           >
             {isRegistering ? "J'ai déjà un compte" : "Je n'ai pas de compte"}
           </button>
