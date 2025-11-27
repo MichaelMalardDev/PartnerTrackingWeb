@@ -76,14 +76,14 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* <div className="mt-6 text-center">
           <button 
             onClick={() => setIsRegistering(!isRegistering)}
             className="text-xs text-zinc-500 hover:text-white transition-colors underline"
           >
             {isRegistering ? "J'ai déjà un compte" : "Je n'ai pas de compte"}
           </button>
-        </div>
+        </div> */}
 
       </div>
     </div>
