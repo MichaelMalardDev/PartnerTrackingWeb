@@ -1,0 +1,33 @@
+/* C'est tout ce qu'il faut pour charger Tailwind v4 */
+@import "tailwindcss";
+
+/* --- TWEAKS MAPBOX (On garde nos hacks visuels) --- */
+
+/* La Popup (Bulle sombre) */
+.mapboxgl-popup-content {
+  background-color: rgba(24, 24, 27, 0.95) !important; /* Zinc-900 */
+  color: white !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  padding: 16px !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* La pointe de la bulle */
+.mapboxgl-popup-tip {
+  border-top-color: rgba(24, 24, 27, 0.95) !important;
+}
+
+/* Boutons de la popup */
+.popup-btn {
+  /* En v4, on peut utiliser @apply, mais le CSS standard est souvent plus simple ici */
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.875rem;
+  transition: opacity 0.2s;
+}
+.popup-btn:hover {
+  opacity: 0.8;
+}
